@@ -44,3 +44,86 @@ export function ajoutListenerEnvoyerAvis() {
     });
   });
 }
+
+export async function afficherGraphiqueAvis() {
+  // Calcul du nombre total de commentaires par quantité d'étoiles attribuées
+  const avis = await fetch("http://localhost:8081/avis").then((avis) =>
+    avis.json()
+  );
+  const nb_commentaires = [0, 0, 0, 0, 0];
+
+  for (let commentaire of avis) {
+    nb_commentaires[commentaire.nbEtoiles - 1]++;
+  }
+  // Légende qui s'affichera sur la gauche à côté de la barre horizontale
+  const labels = ["5", "4", "3", "2", "1"];
+  // Données et personnalisation du graphique
+  const data = {
+    labels: labels,
+    datasets: [
+      {
+        label: "Étoiles attribuées",
+        data: nb_commentaires.reverse(),
+        backgroundColor: "rgba(255, 230, 0, 1)", // couleur jaune
+      },
+    ],
+  };
+  // Objet de configuration final
+  const config = {
+    type: "bar",
+    data: data,
+    options: {
+      indexAxis: "y",
+    },
+  };
+  // Rendu du graphique dans l'élément canvas
+  const graphiqueAvis = new Chart(
+    document.querySelector("#graphique-avis"),
+    config
+  );
+}
+
+export async function afficherGraphiqueCommentaire() {
+  const avis = await fetch("http://localhost:8081/avis").then((avis) =>
+    avis.json()
+  );
+  const pieces = await fetch("http://localhost:8081/pieces").then((pieces) =>
+    pieces.json()
+  );
+  console.log(pieces);
+
+  const nb_commentaires = [0, 0];
+
+  for (let commentaires of avis) {
+    let idPiece = commentaires.pieceId;
+    for (let pieceActuel of pieces) {
+      if (pieceActuel.id === idPiece) {
+        if (pieceActuel.disponibilite === true) {
+          nb_commentaires[0] = nb_commentaires[0] + 1;
+        } else {
+          nb_commentaires[1] = nb_commentaires[1] + 1;
+        }
+      }
+    }
+  }
+  const labels = ["Stock", "Rupture"];
+  const data = {
+    labels: labels,
+    datasets: [
+      {
+        label: "Commentaire sur article en fonction du stock",
+        data: nb_commentaires,
+        backgroundColor: "rgba(0,0,150,1)",
+      },
+    ],
+  };
+  const config = {
+    type: "bar",
+    data: data,
+  };
+
+  const graphiqueDisponibilite = new Chart(
+    document.querySelector("#graphique-commentaire-disponible"),
+    config
+  );
+}
